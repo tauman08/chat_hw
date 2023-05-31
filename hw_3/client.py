@@ -10,7 +10,7 @@ def create_message() -> dict:
     message= {
         'action': 'presence',
         'time': time.time(),
-        'user': {'account_name': 'account_name'}
+        'user': {'account_name': 'Guest'}
     }
     return message
 
@@ -20,6 +20,7 @@ def process_answer(message: dict) -> int:
         if message['response'] == RESPONSE_CODE_SUCCESSFUL:
             return RESPONSE_CODE_SUCCESSFUL
         return RESPONSE_CODE_ERROR
+    raise ValueError
 
 
 def main():
