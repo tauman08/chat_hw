@@ -1,0 +1,2 @@
+2023-06-01 21:56:37,833 DEBUG server.py Получено сообщение: {'action': 'presence', 'time': 1685645797.8332858, 'user': {'account_name': 'Guest'}}
+2023-06-01 21:56:37,835 DEBUG server.py Обработка сообщения от клиента: {'action': 'presence', 'time': 1685645797.8332858, 'user': {'account_name': 'Guest'}}

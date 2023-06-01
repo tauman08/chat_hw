@@ -4,6 +4,10 @@ import sys
 import time
 from common.var import  DEF_SRV_ADDRESS, DEF_SRV_PORT, RESPONSE_CODE_ERROR, RESPONSE_CODE_SUCCESSFUL
 from common.utils import send_message, get_message
+import logging
+import log.conf_client_log
+
+LOG = logging.getLogger('client')
 
 
 def create_message() -> dict:
@@ -12,10 +16,12 @@ def create_message() -> dict:
         'time': time.time(),
         'user': {'account_name': 'Guest'}
     }
+    LOG.debug(f'Сообщение "presence" создано')
     return message
 
 
 def process_answer(message: dict) -> int:
+    LOG.debug(f'Разбор сообщения от сервера: "{message}"')
     if 'response' in message:
         if message['response'] == RESPONSE_CODE_SUCCESSFUL:
             return RESPONSE_CODE_SUCCESSFUL
@@ -24,29 +30,38 @@ def process_answer(message: dict) -> int:
 
 
 def main():
+    LOG.debug(f'заапущен клиент ')
     srv_port = DEF_SRV_PORT
     srv_address = DEF_SRV_ADDRESS
-    if len(sys.argv) == 1:
+    if len(sys.argv) == 2:
         srv_address = sys.argv[1]
-    elif len(sys.argv) == 2:
+    elif len(sys.argv) == 3:
         srv_address = sys.argv[1]
         try:
             srv_port = int(sys.argv[2])
             if srv_port < 1024 or srv_port > 65535:
+                LOG.critical(f'Неверно указан порт : {srv_port}. Диапазон допустимых портов от 1024 до 65535')
                 raise ValueError
         except ValueError:
-            print('Неверно указан порт. Диапазон допустимых портов от 1024 до 65535')
+            pass
 
-    sock = socket(AF_INET, SOCK_STREAM)
-    sock.connect((srv_address, srv_port))
-    message_to = create_message()
-    send_message(sock,message_to)
     try:
+        LOG.debug(f'Начинается попытка подключиться к серверу {srv_address}:{srv_port}, '
+                     f'конечный компьютер отверг запрос на подключение.')
+        sock = socket(AF_INET, SOCK_STREAM)
+        sock.connect((srv_address, srv_port))
+        message_to = create_message()
+        send_message(sock,message_to)
         answer = process_answer(get_message(sock))
+        LOG.info(f'Принят ответ от сервера {answer}')
         print(answer)
     except (ValueError, json.JSONDecodeError):
-        print('Не удалось декодировать сообщение сервера')
+            LOG.error('Не удалось декодировать сообщение сервера')
+    except ConnectionRefusedError:
+        LOG.critical(f'Не удалось подключиться к серверу {srv_address}:{srv_port}, '
+                               f'конечный компьютер отверг запрос на подключение.')
 
 
 if __name__ == '__main__':
+
     main()

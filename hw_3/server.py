@@ -1,12 +1,17 @@
+import logging
 from socket import socket, AF_INET, SOCK_STREAM
 import json
 import sys
 from common.var import DEF_SRV_PORT, DEF_SRV_ADDRESS, MAX_CONNECTIONS, RESPONSE_CODE_SUCCESSFUL, RESPONSE_CODE_ERROR
 from common.utils import get_message, send_message
+import log.conf_srv_log
+
+
+LOG = logging.getLogger('server')
 
 
 def process_message(message: dict):
-
+    LOG.debug(f'Обработка сообщения от клиента: {message}')
     if 'action' in message and message[action] == 'presence' \
             and 'time' in message and 'user' in message and message['user']['account_name'] == 'Guest':
         return {'response': RESPONSE_CODE_SUCCESSFUL}
@@ -14,18 +19,21 @@ def process_message(message: dict):
 
 
 def main():
+
     try:
         if '-p' in sys.argv:
             srv_port = int(sys.argv[sys.argv.index('-p')+1])
         else:
             srv_port = DEF_SRV_PORT
-        if srv_port < 1024 or srv_port > 65535
+        if srv_port < 1024 or srv_port > 65535:
+
             raise ValueError
     except IndexError:
-        print('Не указан номер порта.')
+        LOG.critical((f'неверно указана командная строка'))
         sys.exit(2)
     except ValueError:
-        print('неверно указан номер порта')
+        LOG.critical((f'Запуск сервера с неверным портом {srv_port}. ДОпустимы номера портов с 1024 по 65535'))
+
         sys.exit(2)
     try:
         if '-a' in sys.argv:
@@ -33,9 +41,9 @@ def main():
         else:
             srv_address = DEF_SRV_ADDRESS
     except IndexError:
-        print('Не указан адрес.')
+        LOG.critical((f'Не указан адрес сервера'))
         sys.exit(2)
-
+    LOG.info(f'Запущен сервер по адресу {srv_address} порт {srv_port}')
     listen_socket = socket(AF_INET, SOCK_STREAM)
     listen_socket.bind((srv_address,srv_port))
 
@@ -46,12 +54,14 @@ def main():
             client, client_address = listen_socket.accept()
             try:
                 message = get_message(client)
-                print(message)
+                LOG.debug(f'Получено сообщение: {message}')
                 response = process_message(message)
+                LOG.debug(f'Сформирован ответ клиенту: {response}')
                 send_message(client, response)
+                LOG.debug(f'Закрытие клиентского {client_address} соединения')
                 client.close()
             except (ValueError, json.JSONDecodeError):
-                print('Некорректное сообщение.')
+                LOG.critical(f'От клиента {client_address} пришли некорректные данные')
                 client.close()
     finally:
         listen_socket.close()
