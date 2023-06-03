@@ -15,7 +15,7 @@ def get_message(sock: socket):
 
 
 def send_message(sock: socket, message: dict):
-    if isinstance(message, dict)
+    if isinstance(message, dict):
         json_message = json.dumps(message)
         encode_message = json_message.encode(ENCODING)
         sock.send(encode_message)
