@@ -1,0 +1,3 @@
+2023-06-03 15:17:43,578 DEBUG server.py Получено сообщение: {'action': 'presence', 'time': 1685794663.578971, 'user': {'account_name': 'Guest'}}
+2023-06-03 15:17:43,580 DEBUG server.py Сформирован ответ клиенту: <function log.<locals>.decorator.<locals>.wrapper at 0x0000013731791940>
+2023-06-03 15:17:43,580 CRITICAL server.py От клиента ('127.0.0.1', 64260) пришли некорректные данные
