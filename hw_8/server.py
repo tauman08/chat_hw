@@ -36,12 +36,20 @@ def process_message(message: dict, lst_messages: list, client: socket):
     LOG.debug(f'Обработка сообщения от клиента: {message}') if LOGGING_ON else getpass
 
     if 'action' in message and message['action'] == 'presence' \
-            and 'time' in message and 'user' in message and message['user']['account_name'] == 'Guest':
-        send_message(client, {'response':RESPONSE_CODE_SUCCESSFUL})
+            and 'time' in message and 'user' in message and message['user']['account_name'] != '':
+
+        name_user = message['account_name']
+        exist_lst = [msg[0] for msg in lst_messages if msg[0] == name_user]
+        if len(exist_lst) == 0:
+            send_message(client, {'response': RESPONSE_CODE_SUCCESSFUL})
+        else:
+            send_message(client, {'response': RESPONSE_CODE_ERROR,
+                                  'error': 'Уже существует пользователь с таким именем'})
+
         return
     elif 'action' in message and message['action'] == 'message' and \
             'time' in message and 'message_txt' in message:
-        lst_messages.append((message['Guest'], message['message_txt']))
+        lst_messages.append((message['account_name'], message['message_txt']))
         return
     else:
         send_message(client, {
